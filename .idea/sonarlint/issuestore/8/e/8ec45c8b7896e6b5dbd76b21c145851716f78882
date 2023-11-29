@@ -1,0 +1,7 @@
+
+q
+java:S1450"VRemove the "results" field and declare it as a local variable in the relevant methods.(âåµ£üÿÿÿÿ
+S
+java:S1854–"<Remove this useless assignment to local variable "template".(ÅÙòŠ
+D
+java:S1481–"-Remove this unused "template" local variable.(ÅÙòŠ
