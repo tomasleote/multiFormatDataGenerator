@@ -1,9 +1,21 @@
 # Multi format data generator
 
+- [Introduction](#introduction)
+- [Goal](#goal)
+- [Specification](#specification)
+- [User Interface Instructions](#user-interface-instructions)
+  - [Introduction](#introduction-1)
+  - [Using the UI](#using-the-ui)
+  - [Generators and Properties](#generators-and-properties)
+  - [Additional Evaluators](#additional-evaluators)
+  - [Example Configurations](#example-configurations)
+- [Notes](#notes)
+- [Troubleshooting](#troubleshooting)
+
 ## Introduction
 This code generates random numbers with specific formats, and can include ASCII characters as well. The platform consists of different modules like data masking, synthetic data generation, data subsetting, and a centralized test data portal. For this project, we propose a solution to develop a JAVA generator that returns a stream of unique numbers that can have various format requirements.
 
-Important to note that the view is not working yet.
+Important to note that the view is not working 100% yet, try using one of the mentioned examples.
 
 ## Goal
 Developing a synthetic data generator that can generate thousands of unique values per second with different format requirements. As an addition, a generic user interface could be built inside a C# application that could provide a method to define the unique number requirements.
@@ -11,7 +23,7 @@ Developing a synthetic data generator that can generate thousands of unique valu
 ## Specification
 JAVA generator that can generate a stream of unique keys with different requirements and formats.
 
-It should implement the Java interface `com.datprof.generators.controller.generators.MainGenerator`.
+It should implement the Java interface `com.controller.generators.MainGenerator`.
 
 ### [Current Examples and Descriptions]
 
@@ -53,12 +65,65 @@ Each generator type has specific properties:
 ### Additional Evaluators
 You can add additional evaluator generators that do not contribute directly to the output format but are used to filter values based on logical conditions.
 
+### Example Configurations
+Below are detailed instructions for setting up generators based on the integration tests provided earlier.
+
+#### Dutch BSN Number Generator Setup
+1. **Template Format:** Enter `{0}` in the template format field.
+2. **Generator Configuration:**
+   - For `SEQUENTIALNUMBERGENERATOR`:
+     - `length`: "9"
+     - `start`: "100000000"
+     - `step`: "1"
+     - `padding-length`: "0"
+     - `input`: "0"
+   - For `EVALUATION`:
+     - `formula`: "(9*A + 8*B + 7*C + 6*D + 5*E + 4*F + 3*G + 2*H - I) % 11 == 0"
+     - `input`: "0"
+3. **Generate:** Click "Generate" to produce valid BSN numbers.
+
+#### Belgian SSN Generator Setup
+...
+
+#### Full Generator Process Setup
+1. **Template Format:** Enter `{0}--{1}--{2}` in the template format field.
+2. **Generator Configuration:**
+   - For `SEQUENTIALNUMBERGENERATOR`:
+     - `length`: "3"
+     - `start`: "100"
+     - `step`: "1"
+     - `padding-length`: "3"
+     - `format`: "{1}{2}-{3}"
+     - `input`: "0"
+   - For `CALCULATION`:
+     - `formula`: "A+B+C"
+     - `input`: "0"
+     - `length`: "2"
+     - `format`: "{1}{2}AAA"
+   - For `EVALUATION`:
+     - `formula`: "A%2==0"
+     - `input`: "0"
+     - `length`: "3"
+   - For `SEQUENTIALASCIIGENERATOR`:
+     - `list`: "a,b,c"
+     - `length`: "3"
+     - `start`: "aaa"
+     - `padding-length`: "3"
+     - `format`: "{1}--{2}--{3}"
+     - `input`: "3"
+3. **Generate:** Click "Generate" to produce complex formatted sequences.
+
 ### Notes
 - Remember to use the dropdown to select the number of additional evaluators required.
 - The evaluator's properties are similar to those of the Calculation generator but are used to filter rather than format values.
 
-### Example Usage
-- To generate a Dutch BSN number, you could set a Sequential Number Generator with the appropriate length and step, and then add an Evaluation generator with the BSN validation formula.
+Example Java libraries implementing some kind of expression evaluator (to use or to get inspiration from):
+
+ - https://www.janino.net/use.html#expression_evaluator
+ - https://commons.apache.org/proper/commons-jexl/
+ - https://sourceforge.net/projects/mxparser/
+ - https://mathparser.org/
+ - https://juel.sourceforge.net/
 
 ### Troubleshooting
 If you encounter any issues while using the UI, ensure all required properties are filled in and that the format string correctly matches the number of configured generators.
