@@ -80,9 +80,6 @@ Below are detailed instructions for setting up generators based on the integrati
      - `input`: "0"
 3. **Generate:** Click "Generate" to produce valid BSN numbers.
 
-#### Belgian SSN Generator Setup
-...
-
 #### Full Generator Process Setup
 1. **Template Format:** Enter `{0}--{1}--{2}` in the template format field.
 2. **Generator Configuration:**
@@ -125,8 +122,4 @@ Example Java libraries implementing some kind of expression evaluator (to use or
 
 ### Troubleshooting
 If you encounter any issues while using the UI, ensure all required properties are filled in and that the format string correctly matches the number of configured generators.
-
-For more details and examples, please refer to the provided links and example configurations.
-
-[...]
 
