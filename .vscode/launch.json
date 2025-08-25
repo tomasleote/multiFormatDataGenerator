@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "multiFormatDataGenerator"
+        },
+        {
+            "type": "java",
+            "name": "Run Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "multi-format-data-generator",
+            "console": "integratedTerminal",
+            "args": [],
+            "vmArgs": []
+        },
+        {
+            "type": "java",
+            "name": "Debug Main",
+            "request": "launch",
+            "mainClass": "Main",
+            "projectName": "multi-format-data-generator",
+            "console": "integratedTerminal",
+            "args": [],
+            "vmArgs": []
+        },
+        {
+            "type": "java",
+            "name": "Run Current File",
+            "request": "launch",
+            "mainClass": "${file}",
+            "projectName": "multi-format-data-generator"
+        }
+    ]
+}

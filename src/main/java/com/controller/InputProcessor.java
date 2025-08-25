@@ -7,7 +7,7 @@ import com.controller.subgenerators.SequentialNumberGenerator;
 import com.controller.subgenerators.tools.Calculator;
 import com.controller.subgenerators.tools.Evaluator;
 import com.model.Template;
-import com.datprof.generators.model.patterns.*;
+
 import com.model.patterns.IPattern;
 import com.model.patterns.SequentialASCIIPattern;
 import com.model.patterns.SequentialPattern;

@@ -1,0 +1,215 @@
+package com.service;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * Service for exporting generated data in various formats.
+ * Supports CSV, TXT, and JSON export formats with progress tracking.
+ */
+public class ExportService {
+    
+    private final ObjectMapper objectMapper;
+    
+    public ExportService() {
+        this.objectMapper = new ObjectMapper();
+    }
+    
+    /**
+     * Export data to CSV format
+     */
+    public boolean exportToCSV(Component parent, List<String> data, String templateFormat) {
+        try {
+            JFileChooser fileChooser = createFileChooser("Export as CSV", "csv", "CSV files");
+            
+            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                File file = ensureExtension(fileChooser.getSelectedFile(), ".csv");
+                
+                SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+                    @Override
+                    protected Boolean doInBackground() throws Exception {
+                        try (FileWriter fileWriter = new FileWriter(file);
+                             CSVPrinter csvPrinter = new CSVPrinter(fileWriter, 
+                                CSVFormat.DEFAULT.withHeader("Generated_Data"))) {
+                            
+                            for (String value : data) {
+                                csvPrinter.printRecord(value);
+                            }
+                            
+                            csvPrinter.flush();
+                            return true;
+                        }
+                    }
+                    
+                    @Override
+                    protected void done() {
+                        try {
+                            if (get()) {
+                                showSuccessDialog(parent, "CSV Export", 
+                                    "Successfully exported " + data.size() + " records to " + file.getName());
+                            }
+                        } catch (Exception e) {
+                            showErrorDialog(parent, "Export Error", 
+                                "Failed to export CSV: " + e.getMessage());
+                        }
+                    }
+                };
+                
+                worker.execute();
+                return true;
+            }
+        } catch (Exception e) {
+            showErrorDialog(parent, "Export Error", 
+                "Failed to export CSV: " + e.getMessage());
+        }
+        return false;
+    }
+    
+    /**
+     * Export data to plain text format
+     */
+    public boolean exportToTXT(Component parent, List<String> data, String templateFormat) {
+        try {
+            JFileChooser fileChooser = createFileChooser("Export as TXT", "txt", "Text files");
+            
+            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                File file = ensureExtension(fileChooser.getSelectedFile(), ".txt");
+                
+                SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+                    @Override
+                    protected Boolean doInBackground() throws Exception {
+                        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
+                            // Write header
+                            writer.println("# Generated Data - " + getCurrentTimestamp());
+                            writer.println("# Template Format: " + templateFormat);
+                            writer.println("# Total Records: " + data.size());
+                            writer.println("# ================================");
+                            writer.println();
+                            
+                            for (String value : data) {
+                                writer.println(value);
+                            }
+                            
+                            return true;
+                        }
+                    }
+                    
+                    @Override
+                    protected void done() {
+                        try {
+                            if (get()) {
+                                showSuccessDialog(parent, "TXT Export", 
+                                    "Successfully exported " + data.size() + " records to " + file.getName());
+                            }
+                        } catch (Exception e) {
+                            showErrorDialog(parent, "Export Error", 
+                                "Failed to export TXT: " + e.getMessage());
+                        }
+                    }
+                };
+                
+                worker.execute();
+                return true;
+            }
+        } catch (Exception e) {
+            showErrorDialog(parent, "Export Error", 
+                "Failed to export TXT: " + e.getMessage());
+        }
+        return false;
+    }
+    
+    /**
+     * Export data to JSON format
+     */
+    public boolean exportToJSON(Component parent, List<String> data, String templateFormat) {
+        try {
+            JFileChooser fileChooser = createFileChooser("Export as JSON", "json", "JSON files");
+            
+            if (fileChooser.showSaveDialog(parent) == JFileChooser.APPROVE_OPTION) {
+                File file = ensureExtension(fileChooser.getSelectedFile(), ".json");
+                
+                SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+                    @Override
+                    protected Boolean doInBackground() throws Exception {
+                        ObjectNode root = objectMapper.createObjectNode();
+                        
+                        // Add metadata
+                        ObjectNode metadata = root.putObject("metadata");
+                        metadata.put("exportDate", getCurrentTimestamp());
+                        metadata.put("templateFormat", templateFormat);
+                        metadata.put("totalRecords", data.size());
+                        metadata.put("version", "3.0");
+                        
+                        // Add data array
+                        ArrayNode dataArray = root.putArray("data");
+                        for (String value : data) {
+                            dataArray.add(value);
+                        }
+                        
+                        // Write to file
+                        objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, root);
+                        return true;
+                    }
+                    
+                    @Override
+                    protected void done() {
+                        try {
+                            if (get()) {
+                                showSuccessDialog(parent, "JSON Export", 
+                                    "Successfully exported " + data.size() + " records to " + file.getName());
+                            }
+                        } catch (Exception e) {
+                            showErrorDialog(parent, "Export Error", 
+                                "Failed to export JSON: " + e.getMessage());
+                        }
+                    }
+                };
+                
+                worker.execute();
+                return true;
+            }
+        } catch (Exception e) {
+            showErrorDialog(parent, "Export Error", 
+                "Failed to export JSON: " + e.getMessage());
+        }
+        return false;
+    }
+    
+    private JFileChooser createFileChooser(String title, String extension, String description) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle(title);
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(description, extension));
+        fileChooser.setSelectedFile(new File("generated-data." + extension));
+        return fileChooser;
+    }
+    
+    private File ensureExtension(File file, String extension) {
+        if (!file.getName().toLowerCase().endsWith(extension)) {
+            return new File(file.getAbsolutePath() + extension);
+        }
+        return file;
+    }
+    
+    private String getCurrentTimestamp() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+    
+    private void showErrorDialog(Component parent, String title, String message) {
+        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.ERROR_MESSAGE);
+    }
+    
+    private void showSuccessDialog(Component parent, String title, String message) {
+        JOptionPane.showMessageDialog(parent, message, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+}
