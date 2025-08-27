@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "GeneratorUI",
+            "request": "launch",
+            "mainClass": "com.view.GeneratorUI",
+            "projectName": "multiFormatDataGenerator"
+        },
+        {
+            "type": "java",
             "name": "Main",
             "request": "launch",
             "mainClass": "Main",

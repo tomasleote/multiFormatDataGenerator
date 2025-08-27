@@ -49,6 +49,28 @@ public class GeneratorUI extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Center on screen
         
+        // Apply dark theme
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+            UIManager.put("control", new Color(60, 63, 65));
+            UIManager.put("info", new Color(60, 63, 65));
+            UIManager.put("nimbusBase", new Color(18, 30, 49));
+            UIManager.put("nimbusAlertYellow", new Color(248, 187, 0));
+            UIManager.put("nimbusDisabledText", new Color(128, 128, 128));
+            UIManager.put("nimbusFocus", new Color(115, 164, 209));
+            UIManager.put("nimbusGreen", new Color(176, 179, 50));
+            UIManager.put("nimbusInfoBlue", new Color(66, 139, 221));
+            UIManager.put("nimbusLightBackground", new Color(60, 63, 65));
+            UIManager.put("nimbusOrange", new Color(191, 98, 4));
+            UIManager.put("nimbusRed", new Color(169, 46, 34));
+            UIManager.put("nimbusSelectedText", new Color(255, 255, 255));
+            UIManager.put("nimbusSelectionBackground", new Color(104, 93, 156));
+            UIManager.put("text", new Color(230, 230, 230));
+            SwingUtilities.updateComponentTreeUI(this);
+        } catch (Exception e) {
+            System.err.println("Could not set dark theme: " + e.getMessage());
+        }
+        
         // Initialize services
         configurationService = new SimpleConfigurationService();
         exportService = new SimpleExportService();
@@ -1124,90 +1146,39 @@ public class GeneratorUI extends JFrame {
         // Clear existing configuration
         generatorPanelContainer.removeAll();
         
-        // Set complex template using all generator types
-        templateFormatField.setText("{0}-{1}-{2}-{3}-{4}-{5}");
-        evaluatorCountComboBox.setSelectedIndex(2); // Set to 2 evaluators first
-        batchSizeSpinner.setValue(15);
+        // Set simple multi-generator template
+        templateFormatField.setText("{0}-{1}-{2}");
+        evaluatorCountComboBox.setSelectedIndex(0); // No evaluators to keep it simple
+        batchSizeSpinner.setValue(10);
         
         // Apply template to create generator panels
-        setupGeneratorsBasedOnTemplate(6);
+        setupGeneratorsBasedOnTemplate(3);
         
-        // Configure all six generators with complex interdependencies
-        // Generator 0: Base Sequential Number - foundation for others
+        // Generator 0: Simple Sequential Number
         if (generatorPanelContainer.getComponentCount() > 0) {
             GeneratorPanel panel = (GeneratorPanel) generatorPanelContainer.getComponent(0);
             setGeneratorProperties(panel, "SEQUENTIALNUMBERGENERATOR", new String[][]{
-                {"input", "0"}, {"length", "3"}, {"start", "100"}, {"step", "2"}, {"padding-length", "3"}
+                {"input", "0"}, {"length", "3"}, {"start", "100"}, {"step", "1"}, {"padding-length", "3"}
             });
         }
         
-        // Generator 1: Sequential ASCII - independent but referenced by others
+        // Generator 1: Simple ASCII generator
         if (generatorPanelContainer.getComponentCount() > 1) {
             GeneratorPanel panel = (GeneratorPanel) generatorPanelContainer.getComponent(1);
             setGeneratorProperties(panel, "SEQUENTIALASCIIGENERATOR", new String[][]{
-                {"input", "1"}, {"list", "A,B,C,D,E"}, {"length", "2"}, {"start", "AB"}, {"step", "1"}, {"padding-length", "2"}
+                {"input", "1"}, {"list", "A,B,C"}, {"length", "2"}, {"start", "AA"}, {"step", "1"}, {"padding-length", "2"}
             });
         }
         
-        // Generator 2: Calculation based on Generator 0 (A)
+        // Generator 2: Simple Calculation using Generator 0
         if (generatorPanelContainer.getComponentCount() > 2) {
             GeneratorPanel panel = (GeneratorPanel) generatorPanelContainer.getComponent(2);
             setGeneratorProperties(panel, "CALCULATION", new String[][]{
-                {"input", "0"}, {"formula", "A * 3 + 50"}, {"length", "4"}
+                {"input", "0"}, {"formula", "A + 10"}, {"length", "3"}
             });
         }
         
-        // Generator 3: Sequential Number that uses Generator 2 as input
-        if (generatorPanelContainer.getComponentCount() > 3) {
-            GeneratorPanel panel = (GeneratorPanel) generatorPanelContainer.getComponent(3);
-            setGeneratorProperties(panel, "SEQUENTIALNUMBERGENERATOR", new String[][]{
-                {"input", "2"}, {"length", "2"}, {"start", "10"}, {"step", "3"}, {"padding-length", "2"}
-            });
-        }
-        
-        // Generator 4: Complex calculation using multiple previous generators (A, C, D)
-        if (generatorPanelContainer.getComponentCount() > 4) {
-            GeneratorPanel panel = (GeneratorPanel) generatorPanelContainer.getComponent(4);
-            setGeneratorProperties(panel, "CALCULATION", new String[][]{
-                {"input", "0"}, {"formula", "(A + C + D) % 1000"}, {"length", "3"}
-            });
-        }
-        
-        // Generator 5: ASCII generator that uses Generator 4 as input
-        if (generatorPanelContainer.getComponentCount() > 5) {
-            GeneratorPanel panel = (GeneratorPanel) generatorPanelContainer.getComponent(5);
-            setGeneratorProperties(panel, "SEQUENTIALASCIIGENERATOR", new String[][]{
-                {"input", "4"}, {"list", "X,Y,Z,W"}, {"length", "2"}, {"start", "XY"}, {"step", "1"}, {"padding-length", "2"}
-            });
-        }
-        
-        // Configure evaluators with complex conditions
-        int evaluatorCount = 0;
-        for (int i = 0; i < generatorPanelContainer.getComponentCount(); i++) {
-            Component comp = generatorPanelContainer.getComponent(i);
-            if (comp instanceof GeneratorPanel) {
-                GeneratorPanel panel = (GeneratorPanel) comp;
-                if (panel.getGeneratorIndex() == -1) { // This is an evaluator
-                    if (evaluatorCount == 0) {
-                        // First evaluator: Only even numbers from first generator
-                        setGeneratorProperties(panel, "EVALUATION", new String[][]{
-                            {"input", "0"},
-                            {"formula", "A % 2 == 0"}
-                        });
-                    } else if (evaluatorCount == 1) {
-                        // Second evaluator: Complex condition using multiple generators
-                        setGeneratorProperties(panel, "EVALUATION", new String[][]{
-                            {"input", "0"},
-                            {"formula", "(A + C + E) < 1000"}
-                        });
-                    }
-                    evaluatorCount++;
-                    if (evaluatorCount >= 2) break; // Only configure first 2 evaluators
-                }
-            }
-        }
-        
-        statusLabel.setText("Complex multi-generator example loaded with interdependencies - ready to generate!");
+        statusLabel.setText("Simple multi-generator example loaded - ready to generate!");
         showPreview();
     }
     
