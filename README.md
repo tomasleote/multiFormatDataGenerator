@@ -15,8 +15,6 @@
 ## Introduction
 This code generates random numbers with specific formats, and can include ASCII characters as well. The platform consists of different modules like data masking, synthetic data generation, data subsetting, and a centralized test data portal. For this project, we propose a solution to develop a JAVA generator that returns a stream of unique numbers that can have various format requirements.
 
-Important to note that the view is not working 100% yet, try using one of the mentioned examples.
-
 ## Goal
 Developing a synthetic data generator that can generate thousands of unique values per second with different format requirements. As an addition, a generic user interface could be built inside a C# application that could provide a method to define the unique number requirements.
 
@@ -82,9 +80,6 @@ Below are detailed instructions for setting up generators based on the integrati
      - `input`: "0"
 3. **Generate:** Click "Generate" to produce valid BSN numbers.
 
-#### Belgian SSN Generator Setup
-...
-
 #### Full Generator Process Setup
 1. **Template Format:** Enter `{0}--{1}--{2}` in the template format field.
 2. **Generator Configuration:**
@@ -127,8 +122,4 @@ Example Java libraries implementing some kind of expression evaluator (to use or
 
 ### Troubleshooting
 If you encounter any issues while using the UI, ensure all required properties are filled in and that the format string correctly matches the number of configured generators.
-
-For more details and examples, please refer to the provided links and example configurations.
-
-[...]
 
