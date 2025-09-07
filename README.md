@@ -38,7 +38,7 @@
 ## Introduction
 This code generates random numbers with specific formats, and can include ASCII characters as well. The platform consists of different modules like data masking, synthetic data generation, data subsetting, and a centralized test data portal. For this project, we propose a solution to develop a JAVA generator that returns a stream of unique numbers that can have various format requirements.
 
-![Alt text](C:\Users\tomas\Desktop\Projetos\Programming\multiFormatDataGenerator\pictures\demoPic.png)
+![Demo UI](./pictures/demoPic.png)
 
 
 ## Goal
