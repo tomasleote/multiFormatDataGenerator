@@ -78,6 +78,29 @@ public class UIComponentFactory {
     }
     
     /**
+     * Create a primary button (emphasized)
+     * @param text The button text
+     * @return A styled primary JButton
+     */
+    public static JButton createPrimaryButton(String text) {
+        JButton button = createButton(text);
+        button.setBackground(UIConstants.ACCENT_COLOR);
+        button.setForeground(Color.WHITE);
+        button.setFont(UIConstants.BUTTON_FONT.deriveFont(Font.BOLD));
+        return button;
+    }
+    
+    /**
+     * Create a secondary button (normal)
+     * @param text The button text
+     * @return A styled secondary JButton
+     */
+    public static JButton createSecondaryButton(String text) {
+        JButton button = createButton(text);
+        return button;
+    }
+    
+    /**
      * Create an icon button
      * @param icon The button icon
      * @param tooltip The tooltip text

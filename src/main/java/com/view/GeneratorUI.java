@@ -41,7 +41,6 @@ public class GeneratorUI extends JFrame {
     
     // === UI UTILITIES (Phase 1) ===
     private final UIThemeManager themeManager;
-    private final UIComponentFactory componentFactory;
     
     // === UI COMPONENTS (Only UI state, no business logic) ===
     private JTextField templateFormatField;
@@ -72,7 +71,6 @@ public class GeneratorUI extends JFrame {
         
         // === STEP 3: Initialize UI Utilities (Phase 1) ===
         this.themeManager = new UIThemeManager();
-        this.componentFactory = new UIComponentFactory();
         
         // === STEP 4: Build UI (Delegated to helpers) ===
         initializeFrame();
@@ -114,11 +112,11 @@ public class GeneratorUI extends JFrame {
     }
     
     /**
-     * Create UI components (delegated to component factory).
+     * Create UI components (using static factory methods).
      */
     private void createComponents() {
         // Template section
-        templateFormatField = componentFactory.createTextField(30);
+        templateFormatField = UIComponentFactory.createTextField(30);
         templateFormatField.setToolTipText(
             documentationManager.createTooltip("Template Format", 
             "Enter format like {0}, {0}-{1}, etc."));
@@ -145,103 +143,181 @@ public class GeneratorUI extends JFrame {
     }
     
     /**
-     * Layout components (UI structure only).
+     * Layout components with side-by-side design.
+     * Template at top, generators and output side by side with resizable divider, controls at bottom centered.
      */
     private void layoutComponents() {
         setLayout(new BorderLayout());
         
-        // Top panel - Template and controls
-        JPanel topPanel = createTopPanel();
+        // Top panel - Compact template configuration
+        JPanel topPanel = createCompactTemplatePanel();
         add(topPanel, BorderLayout.NORTH);
         
-        // Center - Split pane with generators and output
+        // Center - Split pane with generators and output side by side
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplit.setLeftComponent(createGeneratorPanel());
-        mainSplit.setRightComponent(createOutputPanel());
-        mainSplit.setDividerLocation(500);
+        
+        // Create and configure left panel (Generator Configuration)
+        JPanel leftPanel = createGeneratorConfigurationPanel();
+        leftPanel.setMinimumSize(new Dimension(400, 0));
+        
+        // Create and configure right panel (Output Display) - Default visible and opened
+        JPanel rightPanel = createOutputDisplayPanel();
+        rightPanel.setMinimumSize(new Dimension(400, 0));
+        
+        mainSplit.setLeftComponent(leftPanel);
+        mainSplit.setRightComponent(rightPanel);
+        
+        // Configure split pane for optimal user experience
+        mainSplit.setDividerLocation(600); // Initial position - adjustable
+        mainSplit.setResizeWeight(0.5); // Equal resize distribution
+        mainSplit.setContinuousLayout(true); // Smooth resizing
+        mainSplit.setOneTouchExpandable(true); // Allow quick expand/collapse
+        mainSplit.setDividerSize(8); // Make divider more prominent
+        
         add(mainSplit, BorderLayout.CENTER);
         
-        // Bottom - Status bar
-        JPanel statusPanel = createStatusPanel();
-        add(statusPanel, BorderLayout.SOUTH);
+        // Bottom - Centered generation controls
+        JPanel bottomPanel = createGenerationControlsPanel();
+        add(bottomPanel, BorderLayout.SOUTH);
     }
     
-    private JPanel createTopPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    /**
+     * Create compact template configuration panel for the top.
+     */
+    private JPanel createCompactTemplatePanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         panel.setBorder(BorderFactory.createTitledBorder("Template Configuration"));
         
         panel.add(new JLabel("Template:"));
         panel.add(templateFormatField);
-        panel.add(componentFactory.createPrimaryButton("Apply Template"));
+        panel.add(UIComponentFactory.createPrimaryButton("Apply Template"));
+        
         panel.add(Box.createHorizontalStrut(20));
         
         panel.add(new JLabel("Evaluators:"));
         panel.add(evaluatorCountComboBox);
-        panel.add(Box.createHorizontalStrut(20));
-        
-        panel.add(new JLabel("Batch Size:"));
-        panel.add(batchSizeSpinner);
-        panel.add(componentFactory.createPrimaryButton("Generate"));
         
         return panel;
     }
     
-    private JPanel createGeneratorPanel() {
+    /**
+     * Create the left-side generator configuration panel.
+     */
+    private JPanel createGeneratorConfigurationPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder("Generators"));
+        panel.setBorder(BorderFactory.createTitledBorder("Generator Configuration"));
+        panel.setPreferredSize(new Dimension(600, 400));
         
-        JScrollPane scrollPane = new JScrollPane(generatorPanelContainer);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        // Generator panels container with scroll
+        JScrollPane generatorScroll = new JScrollPane(generatorPanelContainer);
+        generatorScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        generatorScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        panel.add(generatorScroll, BorderLayout.CENTER);
         
-        // Example buttons
-        JPanel examplePanel = new JPanel(new FlowLayout());
-        examplePanel.setBorder(BorderFactory.createTitledBorder("Examples"));
-        panel.add(examplePanel, BorderLayout.SOUTH);
+        // Preview panel at the bottom of configuration
+        previewPanel.setPreferredSize(new Dimension(0, 120));
+        panel.add(previewPanel, BorderLayout.SOUTH);
+        
+        // Example buttons at the top
+        JPanel examplePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        examplePanel.setBorder(BorderFactory.createTitledBorder("Quick Examples"));
+        panel.add(examplePanel, BorderLayout.NORTH);
         
         return panel;
     }
     
-    private JPanel createOutputPanel() {
+    /**
+     * Create the right-side output display panel.
+     * This panel is prominently displayed and always visible by default.
+     */
+    private JPanel createOutputDisplayPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Generated Output"));
+        panel.setPreferredSize(new Dimension(600, 400));
         
-        // Output area
+        // Output area - prominently displayed and always visible
+        outputArea.setBackground(Color.WHITE);
+        outputArea.setMargin(new Insets(10, 10, 10, 10));
+        outputArea.setText("Generated data will appear here...\n\nTo get started:\n1. Enter a template format (e.g., {0}, {0}-{1})\n2. Configure generators\n3. Click 'Generate Data'");
+        outputArea.setForeground(Color.GRAY);
+        
         JScrollPane outputScroll = new JScrollPane(outputArea);
-        outputScroll.setBorder(BorderFactory.createTitledBorder("Generated Data"));
-        
-        // Preview area
-        previewPanel.add(previewLabel, BorderLayout.CENTER);
-        previewPanel.setPreferredSize(new Dimension(0, 100));
-        
-        // Controls
-        JPanel controlPanel = new JPanel(new FlowLayout());
-        controlPanel.add(componentFactory.createSecondaryButton("Clear Output"));
-        controlPanel.add(new JLabel("Export:"));
-        controlPanel.add(exportFormatComboBox);
-        controlPanel.add(componentFactory.createSecondaryButton("Export"));
-        controlPanel.add(componentFactory.createSecondaryButton("Save Config"));
-        controlPanel.add(componentFactory.createSecondaryButton("Load Config"));
-        
-        panel.add(previewPanel, BorderLayout.NORTH);
+        outputScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        outputScroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        outputScroll.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(5, 5, 5, 5),
+            BorderFactory.createLoweredBevelBorder()
+        ));
+        outputScroll.setPreferredSize(new Dimension(0, 300)); // Ensure minimum height
         panel.add(outputScroll, BorderLayout.CENTER);
-        panel.add(controlPanel, BorderLayout.SOUTH);
+        
+        // Output controls at the top
+        JPanel outputControlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+        outputControlPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 5, 5));
+        outputControlPanel.add(new JLabel("Actions:"));
+        outputControlPanel.add(UIComponentFactory.createSecondaryButton("Clear Output"));
+        outputControlPanel.add(Box.createHorizontalStrut(10));
+        outputControlPanel.add(new JLabel("Export:"));
+        outputControlPanel.add(exportFormatComboBox);
+        outputControlPanel.add(UIComponentFactory.createSecondaryButton("Export"));
+        panel.add(outputControlPanel, BorderLayout.NORTH);
+        
+        // Status information at the bottom - more prominent
+        JPanel statusInfoPanel = new JPanel(new BorderLayout());
+        statusInfoPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(5, 5, 5, 5),
+            BorderFactory.createRaisedBevelBorder()
+        ));
+        statusInfoPanel.add(statusLabel, BorderLayout.WEST);
+        
+        // Progress bar with better styling
+        progressBar.setStringPainted(true);
+        progressBar.setString("Ready");
+        statusInfoPanel.add(progressBar, BorderLayout.CENTER);
+        
+        panel.add(statusInfoPanel, BorderLayout.SOUTH);
         
         return panel;
     }
     
-    private JPanel createStatusPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+    /**
+     * Create the bottom generation controls panel - centered and prominent.
+     */
+    private JPanel createGenerationControlsPanel() {
+        JPanel outerPanel = new JPanel(new BorderLayout());
+        outerPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("Generation Controls"),
+            BorderFactory.createEmptyBorder(5, 10, 10, 10)
+        ));
         
-        panel.add(statusLabel, BorderLayout.WEST);
-        panel.add(progressBar, BorderLayout.CENTER);
+        // Main controls - centered
+        JPanel mainControlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 5));
         
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        rightPanel.add(componentFactory.createSecondaryButton("Help"));
-        rightPanel.add(componentFactory.createSecondaryButton("Reset All"));
-        panel.add(rightPanel, BorderLayout.EAST);
+        // Batch size control
+        JPanel batchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        batchPanel.add(new JLabel("Batch Size:"));
+        batchSizeSpinner.setPreferredSize(new Dimension(80, 25));
+        batchPanel.add(batchSizeSpinner);
+        mainControlsPanel.add(batchPanel);
         
-        return panel;
+        // Prominent generate button - larger and centered
+        JButton generateButton = UIComponentFactory.createPrimaryButton("🚀 Generate Data");
+        generateButton.setPreferredSize(new Dimension(180, 40));
+        generateButton.setFont(generateButton.getFont().deriveFont(Font.BOLD, 14f));
+        mainControlsPanel.add(generateButton);
+        
+        outerPanel.add(mainControlsPanel, BorderLayout.CENTER);
+        
+        // Secondary controls - right side
+        JPanel secondaryControlsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
+        secondaryControlsPanel.add(UIComponentFactory.createSecondaryButton("Save Config"));
+        secondaryControlsPanel.add(UIComponentFactory.createSecondaryButton("Load Config"));
+        secondaryControlsPanel.add(UIComponentFactory.createSecondaryButton("Reset All"));
+        secondaryControlsPanel.add(UIComponentFactory.createSecondaryButton("Help"));
+        
+        outerPanel.add(secondaryControlsPanel, BorderLayout.EAST);
+        
+        return outerPanel;
     }
     
     /**
@@ -255,8 +331,8 @@ public class GeneratorUI extends JFrame {
         
         // Connect button actions to event handler (NO business logic here!)
         findButton("Apply Template").addActionListener(eventHandler.createApplyTemplateListener());
-        findButton("Generate").addActionListener(eventHandler.createGenerateListener(() -> (Integer) batchSizeSpinner.getValue()));
-        findButton("Clear Output").addActionListener(eventHandler.createClearOutputListener());
+        findButton("🚀 Generate Data").addActionListener(eventHandler.createGenerateListener(() -> (Integer) batchSizeSpinner.getValue()));
+        findButton("Clear Output").addActionListener(e -> resetOutputArea());
         findButton("Save Config").addActionListener(eventHandler.createSaveConfigListener());
         findButton("Load Config").addActionListener(eventHandler.createLoadConfigListener());
         findButton("Export").addActionListener(eventHandler.createExportListener(() -> 
@@ -290,7 +366,7 @@ public class GeneratorUI extends JFrame {
      * Setup example buttons (delegated to ExampleLoader).
      */
     private void setupExampleButtons() {
-        JPanel examplePanel = findPanel("Examples");
+        JPanel examplePanel = findPanel("Quick Examples");
         if (examplePanel != null) {
             for (String exampleKey : exampleLoader.getAllExampleKeys()) {
                 ExampleLoader.ExampleMetadata metadata = exampleLoader.getExampleMetadata(exampleKey);
@@ -322,17 +398,37 @@ public class GeneratorUI extends JFrame {
         
         // Progress updates
         eventHandler.addEventListener(UIEventHandler.EventType.GENERATION_STARTED, 
-            eventData -> progressBar.setIndeterminate(true));
+            eventData -> {
+                progressBar.setIndeterminate(true);
+                progressBar.setString("Generating...");
+            });
         eventHandler.addEventListener(UIEventHandler.EventType.GENERATION_COMPLETED, 
             eventData -> {
                 progressBar.setIndeterminate(false);
                 progressBar.setValue(100);
+                progressBar.setString("Complete");
+                // Clear placeholder text when real data is generated
+                if (outputArea.getForeground().equals(Color.GRAY)) {
+                    outputArea.setForeground(Color.BLACK);
+                }
             });
         eventHandler.addEventListener(UIEventHandler.EventType.GENERATION_FAILED, 
             eventData -> {
                 progressBar.setIndeterminate(false);
                 progressBar.setValue(0);
+                progressBar.setString("Failed");
             });
+            
+        // Clear placeholder behavior for output area
+        outputArea.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (outputArea.getForeground().equals(Color.GRAY)) {
+                    outputArea.setText("");
+                    outputArea.setForeground(Color.BLACK);
+                }
+            }
+        });
     }
     
     /**
@@ -356,11 +452,20 @@ public class GeneratorUI extends JFrame {
      */
     private void resetAllComponents() {
         templateFormatField.setText("");
-        outputArea.setText("");
+        resetOutputArea();
         progressBar.setValue(0);
+        progressBar.setString("Ready");
         previewLabel.setText("Preview: No template applied");
         panelManager.clearAllPanels();
         statusLabel.setText("All components reset. Ready to start fresh.");
+    }
+    
+    /**
+     * Reset output area to initial placeholder state.
+     */
+    private void resetOutputArea() {
+        outputArea.setText("Generated data will appear here...\n\nTo get started:\n1. Enter a template format (e.g., {0}, {0}-{1})\n2. Configure generators\n3. Click 'Generate Data'");
+        outputArea.setForeground(Color.GRAY);
     }
     
     /**
